@@ -32,47 +32,67 @@
         </developer>
     </developers>
 
-    <version>0.3.4-SNAPSHOT</version>
+    <version>2.2.2-SNAPSHOT</version>
 
     <modules>
         <module>spring-batch-lightmin-core</module>
-        <module>spring-batch-lightmin-ui</module>
         <module>spring-batch-lightmin-documentation</module>
         <module>spring-batch-lightmin-client</module>
         <module>spring-batch-lightmin-api</module>
         <module>spring-batch-lightmin-server</module>
+        <module>spring-batch-lightmin-repository-server</module>
+        <module>spring-batch-lightmin-repository</module>
+        <module>spring-batch-lightmin-domain</module>
+        <module>spring-batch-lightmin-test</module>
+        <module>spring-batch-lightmin-util</module>
+        <module>spring-batch-lightmin-embedded</module>
+        <module>spring-batch-lightmin-validation</module>
+        <module>spring-batch-lightmin-metrics</module>
     </modules>
 
     <properties>
-        <platform-bom.version>2.0.7.RELEASE</platform-bom.version>
-        <assertj.version>1.7.1</assertj.version>
-        <openpojo.version>0.8.0</openpojo.version>
+        <spring.boot.version>2.4.1</spring.boot.version>
+        <spring-cloud-dependencies.version>2020.0.0</spring-cloud-dependencies.version>
+        <assertj.version>3.15.0</assertj.version>
+        <openpojo.version>0.8.13</openpojo.version>
         <equalsverifier.version>1.7.5</equalsverifier.version>
         <datafactory.version>0.8</datafactory.version>
-        <spring-restdocs.version>1.1.2.RELEASE</spring-restdocs.version>
+        <jacoco.version>0.8.5</jacoco.version>
+        <infinispan9.version>9.4.20.Final</infinispan9.version>
+        <infinispan.version>11.0.8.Final</infinispan.version>
         <!-- plugin versions -->
-        <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
-        <maven-compiler-plugin.source>1.7</maven-compiler-plugin.source>
-        <maven-compiler-plugin.target>1.7</maven-compiler-plugin.target>
+        <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
+        <maven-compiler-plugin.source>1.8</maven-compiler-plugin.source>
+        <maven-compiler-plugin.target>1.8</maven-compiler-plugin.target>
         <nexus-staging-maven-plugin.version>1.6.3</nexus-staging-maven-plugin.version>
         <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
         <maven-gpg-plugin.version>1.5</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
-        <maven-failsaife-plugin.version>2.19.1</maven-failsaife-plugin.version>
+        <maven-surefire-plugin.version>2.20.1</maven-surefire-plugin.version>
+        <maven-failsaife-plugin.version>2.20.1</maven-failsaife-plugin.version>
+        <maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
         <asciidoctor.version>1.5.2</asciidoctor.version>
+        <!-- jacoco -->
+        <jacoco.skip>false</jacoco.skip>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- spring.io plattform -->
+            <!-- spring boot dependencies -->
             <dependency>
-                <groupId>io.spring.platform</groupId>
-                <artifactId>platform-bom</artifactId>
-                <version>${platform-bom.version}</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- assertj -->
             <dependency>
                 <groupId>org.assertj</groupId>
@@ -87,6 +107,38 @@
                 <version>${datafactory.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <!-- infinispan -->
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-commons</artifactId>
+                <version>${infinispan.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-core</artifactId>
+                <version>${infinispan.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-spring5-common</artifactId>
+                <version>${infinispan.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-spring5-embedded</artifactId>
+                <version>${infinispan.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-clustered-lock</artifactId>
+                <version>${infinispan.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -185,7 +237,13 @@
                     <encoding>UTF-8</encoding>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
+                    <parameters>true</parameters>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven-deploy-plugin.version}</version>
             </plugin>
             <!-- surefire -->
             <plugin>
@@ -198,7 +256,48 @@
                     </includes>
                 </configuration>
             </plugin>
-
+            <!-- jacoco -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-prepare-agent-integration</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report-integration</id>
+                        <goals>
+                            <goal>report-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules/>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -311,5 +410,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>

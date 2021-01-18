@@ -1,17 +1,22 @@
 package org.tuxdevelop.spring.batch.lightmin.documentation.api.client;
 
 
-import com.jayway.restassured.http.ContentType;
+import io.restassured.http.ContentType;
 import org.junit.Test;
-import org.tuxdevelop.spring.batch.lightmin.api.controller.AbstractRestController;
+import org.springframework.batch.core.ExitStatus;
+import org.tuxdevelop.spring.batch.lightmin.batch.dao.QueryParameterKey;
+import org.tuxdevelop.spring.batch.lightmin.client.api.controller.AbstractRestController;
 import org.tuxdevelop.spring.batch.lightmin.documentation.api.AbstractServiceDocumentation;
 
-import static com.jayway.restassured.RestAssured.given;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
-import static org.springframework.restdocs.restassured.RestAssuredRestDocumentation.document;
-import static org.springframework.restdocs.restassured.operation.preprocess.RestAssuredPreprocessors.modifyUris;
+import static org.springframework.restdocs.restassured3.RestAssuredRestDocumentation.document;
 
 public class JobRestControllerDocumentation extends AbstractServiceDocumentation {
 
@@ -30,8 +35,8 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         pathParameters(
                                 parameterWithName("jobexecutionid").description("The job execution id"))))
                 .when()
-                .port(getServerPort())
-                .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTIONS_JOB_EXECUTION_ID, launchedJobExecutionId)
+                .port(this.getServerPort())
+                .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTIONS_JOB_EXECUTION_ID, this.launchedJobExecutionId)
                 .then()
                 .assertThat().statusCode(is(200));
 
@@ -53,9 +58,9 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                                 parameterWithName("startindex").description("Index start position of the page"),
                                 parameterWithName("pagesize").description("Size of the page"))))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTION_PAGES_INSTANCE_ID
-                        + "?jobinstanceid=" + launchedJobInstanceId
+                        + "?jobinstanceid=" + this.launchedJobInstanceId
                         + "&startindex=0"
                         + "&pagesize=5")
                 .then()
@@ -76,9 +81,9 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         requestParameters(
                                 parameterWithName("jobinstanceid").description("The job instance id"))))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTION_PAGES_INSTANCE_ID_ALL
-                        + "?jobinstanceid=" + launchedJobInstanceId)
+                        + "?jobinstanceid=" + this.launchedJobInstanceId)
                 .then()
                 .assertThat().statusCode(is(200));
     }
@@ -97,7 +102,7 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         requestParameters(
                                 parameterWithName("jobname").description("The name of the Spring Batch Job"))))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .get(AbstractRestController.JobRestControllerAPI.JOB_INSTANCES_JOB_NAME
                         + "?jobname=simpleJob")
                 .then()
@@ -116,7 +121,7 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                                 prettyPrint()),
                         preprocessResponse(prettyPrint())))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .get(AbstractRestController.JobRestControllerAPI.APPLICATION_JOB_INFO)
                 .then()
                 .assertThat().statusCode(is(200));
@@ -136,7 +141,7 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         pathParameters(
                                 parameterWithName("jobname").description("The name of the Spring Batch Job"))))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .get(AbstractRestController.JobRestControllerAPI.JOB_INFO_JOB_NAME, "simpleJob")
                 .then()
                 .assertThat().statusCode(is(200));
@@ -144,7 +149,7 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
 
     @Test
     public void testRestartJobExecution() {
-        launchSimpleJobWithOutParameters();
+        this.launchSimpleJobWithOutParameters();
         given(this.documentationSpec)
                 .accept(ContentType.JSON)
                 .filter(document("jobcontroller/{method-name}",
@@ -157,15 +162,15 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         pathParameters(
                                 parameterWithName("jobexecutionid").description("The id of the Job Execution"))))
                 .when()
-                .port(getServerPort())
-                .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTIONS_RESTART, launchedJobExecutionId)
+                .port(this.getServerPort())
+                .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTIONS_RESTART, this.launchedJobExecutionId)
                 .then()
                 .assertThat().statusCode(is(200));
     }
 
     @Test
     public void testStopJobExecution() {
-        launchSimpleBlockingJob();
+        this.launchSimpleBlockingJob();
         given(this.documentationSpec)
                 .accept(ContentType.JSON)
                 .filter(document("jobcontroller/{method-name}",
@@ -178,11 +183,11 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         pathParameters(
                                 parameterWithName("jobexecutionid").description("The id of the Job Execution"))))
                 .when()
-                .port(getServerPort())
-                .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTIONS_STOP, launchedJobExecutionId)
+                .port(this.getServerPort())
+                .get(AbstractRestController.JobRestControllerAPI.JOB_EXECUTIONS_STOP, this.launchedJobExecutionId)
                 .then()
                 .assertThat().statusCode(is(200));
-        myThread.stop();
+        this.myThread.stop();
     }
 
     @Test
@@ -201,8 +206,8 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                                 parameterWithName("jobexecutionid").description("The id of the Job Execution the " +
                                         "Step Excution belongs to"))))
                 .when()
-                .port(getServerPort())
-                .get(AbstractRestController.JobRestControllerAPI.STEP_EXECUTIONS, launchedStepExecutionId, launchedJobExecutionId)
+                .port(this.getServerPort())
+                .get(AbstractRestController.JobRestControllerAPI.STEP_EXECUTIONS, this.launchedStepExecutionId, this.launchedJobExecutionId)
                 .then()
                 .assertThat().statusCode(is(200));
     }
@@ -221,8 +226,39 @@ public class JobRestControllerDocumentation extends AbstractServiceDocumentation
                         requestParameters(
                                 parameterWithName("jobname").description("The name of the Spring Batch Job"))))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .get(AbstractRestController.JobRestControllerAPI.JOB_PARAMETERS + "?jobname=simpleJob")
+                .then()
+                .assertThat().statusCode(is(200));
+    }
+
+    @Test
+    public void testQueryJobExecutions() {
+        final Date startDate = new Date(System.currentTimeMillis() - 100000);
+        final Date endDate = new Date(System.currentTimeMillis() + 100000);
+        final String exitStatus = ExitStatus.COMPLETED.getExitCode();
+        final Map<String, Object> queryParameters = new HashMap<>();
+        queryParameters.put(QueryParameterKey.EXIT_STATUS, exitStatus);
+        queryParameters.put(QueryParameterKey.START_DATE, startDate);
+        queryParameters.put(QueryParameterKey.END_DATE, endDate);
+        given(this.documentationSpec)
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .filter(document("jobcontroller/{method-name}",
+                        preprocessRequest(modifyUris()
+                                        .scheme("http")
+                                        .host("localhost")
+                                        .removePort(),
+                                prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        requestParameters(
+                                parameterWithName("jobname").description("The name of the Spring Batch Job"),
+                                parameterWithName("resultsize").description("The maximum size of the result"))))
+                .when()
+                .port(this.getServerPort())
+                .body(queryParameters)
+                .post(AbstractRestController.JobRestControllerAPI.QUERY_JOB_EXECUTIONS +
+                        "?jobname=simpleJob&resultsize=4")
                 .then()
                 .assertThat().statusCode(is(200));
     }

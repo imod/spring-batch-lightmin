@@ -44,6 +44,21 @@ include::{snippets}/registrationcontroller/testget-all/http-request.adoc[]
 
 include::{snippets}/registrationcontroller/testget-all/http-response.adoc[]
 
+==== Consume Job Executions
+
+===== Curl
+
+include::{snippets}/jobexecutioncontroller/test-consume-job-execution-failed-event/curl-request.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/jobexecutioncontroller/test-consume-job-execution-failed-event/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/jobexecutioncontroller/test-consume-job-execution-failed-event/http-response.adoc[]
+
+
 === Client
 
 ==== Jobs
@@ -90,6 +105,21 @@ include::{snippets}/jobcontroller/test-get-job-execution-by-id/http-request.adoc
 ====== HTTP Response
 
 include::{snippets}/jobcontroller/test-get-job-execution-by-id/http-response.adoc[]
+
+===== Query Job Executions
+
+====== Curl
+
+include::{snippets}/jobcontroller/test-query-job-executions/curl-request.adoc[]
+
+====== HTTP Request
+
+include::{snippets}/jobcontroller/test-query-job-executions/http-request.adoc[]
+
+====== HTTP Response
+
+include::{snippets}/jobcontroller/test-query-job-executions/http-response.adoc[]
+
 
 ==== Job Launcher
 
@@ -220,3 +250,7 @@ include::{snippets}/jobconfigurationcontroller/test-stop-job-configuration/http-
 ====== HTTP Response
 
 include::{snippets}/jobconfigurationcontroller/test-stop-job-configuration/http-response.adoc[]
+
+
+=== Remote Repository
+

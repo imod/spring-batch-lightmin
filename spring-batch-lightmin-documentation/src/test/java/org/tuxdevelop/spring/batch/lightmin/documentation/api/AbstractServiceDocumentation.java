@@ -1,7 +1,8 @@
 package org.tuxdevelop.spring.batch.lightmin.documentation.api;
 
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.specification.RequestSpecification;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.specification.RequestSpecification;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
@@ -11,21 +12,21 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.restdocs.JUnitRestDocumentation;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.tuxdevelop.spring.batch.lightmin.ITConfigurationApplication;
-import org.tuxdevelop.spring.batch.lightmin.admin.domain.*;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.tuxdevelop.spring.batch.lightmin.client.api.LightminClientApplication;
+import org.tuxdevelop.spring.batch.lightmin.client.classic.configuration.LightminClientClassicConfigurationProperties;
+import org.tuxdevelop.spring.batch.lightmin.client.classic.service.LightminClientRegistratorService;
 import org.tuxdevelop.spring.batch.lightmin.client.configuration.LightminClientProperties;
-import org.tuxdevelop.spring.batch.lightmin.client.configuration.LightminProperties;
-import org.tuxdevelop.spring.batch.lightmin.client.registration.LightminClientRegistrator;
-import org.tuxdevelop.spring.batch.lightmin.server.configuration.LightminServerProperties;
+import org.tuxdevelop.spring.batch.lightmin.documentation.app.ITConfigurationApplication;
+import org.tuxdevelop.spring.batch.lightmin.domain.*;
+import org.tuxdevelop.spring.batch.lightmin.exception.SpringBatchLightminApplicationException;
+import org.tuxdevelop.spring.batch.lightmin.server.configuration.LightminServerCoreProperties;
 import org.tuxdevelop.spring.batch.lightmin.server.support.RegistrationBean;
 import org.tuxdevelop.spring.batch.lightmin.service.AdminService;
-import org.tuxdevelop.spring.batch.lightmin.support.ServiceEntry;
+import org.tuxdevelop.spring.batch.lightmin.service.ServiceEntry;
 import org.tuxdevelop.test.configuration.ITJobConfiguration;
 
 import java.util.Arrays;
@@ -34,17 +35,17 @@ import java.util.Date;
 import java.util.Set;
 
 import static org.junit.Assert.fail;
-import static org.springframework.restdocs.restassured.RestAssuredRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.restassured3.RestAssuredRestDocumentation.documentationConfiguration;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@WebIntegrationTest({"server.port=0", "management.port=0"})
-@SpringApplicationConfiguration(classes = {ITConfigurationApplication.class, ITJobConfiguration.class})
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest(
+        classes = {ITConfigurationApplication.class, ITJobConfiguration.class},
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class AbstractServiceDocumentation {
 
     @Autowired
     private AdminService adminService;
-    @Autowired
-    private EmbeddedWebApplicationContext embeddedWebApplicationContext;
     @Autowired
     private Job simpleJob;
     @Autowired
@@ -54,19 +55,20 @@ public abstract class AbstractServiceDocumentation {
     @Autowired
     protected LightminClientProperties lightminClientProperties;
     @Autowired
-    protected LightminProperties lightminProperties;
+    protected LightminClientClassicConfigurationProperties lightminProperties;
     @Autowired
-    protected LightminServerProperties lightminServerProperties;
+    protected LightminServerCoreProperties lightminServerCoreProperties;
     @Autowired
-    protected LightminClientRegistrator lightminClientRegistrator;
+    protected LightminClientRegistratorService lightminClientRegistrator;
     @Autowired
     protected ServiceEntry serviceEntry;
     @Autowired
     protected JobExplorer jobExplorer;
     @Autowired
     protected RegistrationBean registrationBean;
-
     protected MyThread myThread;
+    @LocalServerPort
+    private Integer serverPort;
 
     @Rule
     public final JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation("target/generated-snippets");
@@ -80,33 +82,33 @@ public abstract class AbstractServiceDocumentation {
     protected Long launchedStepExecutionId;
 
     protected int getServerPort() {
-        return embeddedWebApplicationContext.getEmbeddedServletContainer().getPort();
+        return this.serverPort;
     }
 
 
     protected void addJobConfigurations() {
-        final JobConfiguration jobConfiguration = createJobConfiguration();
-        final JobConfiguration listenerJobConfiguration = createListenerJobConfiguration();
-        adminService.saveJobConfiguration(jobConfiguration);
-        adminService.saveJobConfiguration(listenerJobConfiguration);
-        final Collection<JobConfiguration> jobConfigurations = adminService.getJobConfigurationsByJobName("simpleJob");
+        final JobConfiguration jobConfiguration = this.createJobConfiguration();
+        final JobConfiguration listenerJobConfiguration = this.createListenerJobConfiguration();
+        this.adminService.saveJobConfiguration(jobConfiguration);
+        this.adminService.saveJobConfiguration(listenerJobConfiguration);
+        final Collection<JobConfiguration> jobConfigurations = this.adminService.getJobConfigurationsByJobName("simpleJob");
         for (final JobConfiguration configuration : jobConfigurations) {
             if (configuration.getJobSchedulerConfiguration() != null) {
-                addedJobConfigurationId = configuration.getJobConfigurationId();
+                this.addedJobConfigurationId = configuration.getJobConfigurationId();
             }
             if (configuration.getJobListenerConfiguration() != null) {
-                addedListenerJobConfigurationId = configuration.getJobConfigurationId();
+                this.addedListenerJobConfigurationId = configuration.getJobConfigurationId();
             }
         }
     }
 
     protected void launchSimpleJob() {
         try {
-            final JobExecution execution = jobLauncher.run(simpleJob, new JobParametersBuilder().addDate("date", new
+            final JobExecution execution = this.jobLauncher.run(this.simpleJob, new JobParametersBuilder().addDate("date", new
                     Date()).toJobParameters());
-            launchedJobExecutionId = execution.getId();
-            launchedJobInstanceId = execution.getJobInstance().getId();
-            launchedStepExecutionId = execution.getStepExecutions().iterator().next().getId();
+            this.launchedJobExecutionId = execution.getId();
+            this.launchedJobInstanceId = execution.getJobInstance().getId();
+            this.launchedStepExecutionId = execution.getStepExecutions().iterator().next().getId();
         } catch (final Exception e) {
             fail(e.getMessage());
         }
@@ -114,10 +116,10 @@ public abstract class AbstractServiceDocumentation {
 
     protected void launchSimpleJobWithOutParameters() {
         try {
-            final JobExecution execution = jobLauncher.run(simpleJob, new JobParametersBuilder().toJobParameters());
-            launchedJobExecutionId = execution.getId();
-            launchedJobInstanceId = execution.getJobInstance().getId();
-            launchedStepExecutionId = execution.getStepExecutions().iterator().next().getId();
+            final JobExecution execution = this.jobLauncher.run(this.simpleJob, new JobParametersBuilder().toJobParameters());
+            this.launchedJobExecutionId = execution.getId();
+            this.launchedJobInstanceId = execution.getJobInstance().getId();
+            this.launchedStepExecutionId = execution.getStepExecutions().iterator().next().getId();
         } catch (final Exception e) {
             fail(e.getMessage());
         }
@@ -125,14 +127,14 @@ public abstract class AbstractServiceDocumentation {
 
     protected void launchSimpleBlockingJob() {
         try {
-            myThread = new MyThread(jobLauncher, simpleBlockingJob);
-            myThread.start();
+            this.myThread = new MyThread(this.jobLauncher, this.simpleBlockingJob);
+            this.myThread.start();
             Thread.sleep(500);
-            final Set<JobExecution> jobExecutions = jobExplorer.findRunningJobExecutions(simpleBlockingJob.getName());
+            final Set<JobExecution> jobExecutions = this.jobExplorer.findRunningJobExecutions(this.simpleBlockingJob.getName());
             final JobExecution execution = jobExecutions.iterator().next();
-            launchedJobExecutionId = execution.getId();
-            launchedJobInstanceId = execution.getJobInstance().getId();
-            launchedStepExecutionId = execution.getStepExecutions().iterator().next().getId();
+            this.launchedJobExecutionId = execution.getId();
+            this.launchedJobInstanceId = execution.getJobInstance().getId();
+            this.launchedStepExecutionId = execution.getStepExecutions().iterator().next().getId();
         } catch (final Exception e) {
             fail(e.getMessage());
         }
@@ -186,20 +188,33 @@ public abstract class AbstractServiceDocumentation {
 
     protected LightminClientApplication createLightminClientApplication(final String applicationName) {
         return LightminClientApplication.createApplication
-                (Arrays.asList(simpleJob.getName()), lightminClientProperties);
+                (Arrays.asList(this.simpleJob.getName()), this.lightminClientProperties);
+    }
+
+
+    protected void cleanUp() {
+        try {
+            final Collection<JobConfiguration> allJC = this.adminService.getJobConfigurationsByJobName("simpleJob");
+            for (final JobConfiguration jobConfiguration : allJC) {
+                this.adminService.deleteJobConfiguration(jobConfiguration.getJobConfigurationId());
+            }
+        } catch (final SpringBatchLightminApplicationException e) {
+            log.warn("Repository clean up failed");
+        }
     }
 
     @Before
     public void init() {
-        final int port = embeddedWebApplicationContext.getEmbeddedServletContainer().getPort();
-        lightminClientProperties.setServiceUrl("http://localhost:" + port);
-        lightminClientProperties.setServerPort(port);
-        lightminClientProperties.setManagementPort(port);
-        lightminProperties.setUrl(new String[]{"http://localhost:" + port});
+        this.cleanUp();
+        final int port = this.serverPort;
+        this.lightminClientProperties.setServiceUrl("http://localhost:" + port);
+        this.lightminClientProperties.setServerPort(port);
+        this.lightminClientProperties.setManagementPort(port);
+        this.lightminProperties.getServer().setUrl(new String[]{"http://localhost:" + port});
         //lightminClientRegistrator.register();
-        addJobConfigurations();
-        this.documentationSpec = new RequestSpecBuilder().addFilter(documentationConfiguration(restDocumentation)).build();
-        launchSimpleJob();
+        this.addJobConfigurations();
+        this.documentationSpec = new RequestSpecBuilder().addFilter(documentationConfiguration(this.restDocumentation)).build();
+        this.launchSimpleJob();
     }
 
     public static class MyThread extends Thread {
@@ -215,7 +230,7 @@ public abstract class AbstractServiceDocumentation {
         @Override
         public void run() {
             try {
-                jobLauncher.run(job, new JobParametersBuilder().toJobParameters());
+                this.jobLauncher.run(this.job, new JobParametersBuilder().toJobParameters());
             } catch (final Exception e) {
                 fail(e.getMessage());
             }

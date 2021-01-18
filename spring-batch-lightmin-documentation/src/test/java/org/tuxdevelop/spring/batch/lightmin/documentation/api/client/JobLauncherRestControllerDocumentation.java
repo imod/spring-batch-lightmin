@@ -1,23 +1,21 @@
 package org.tuxdevelop.spring.batch.lightmin.documentation.api.client;
 
-
-import com.jayway.restassured.http.ContentType;
+import io.restassured.http.ContentType;
 import org.junit.Test;
-import org.tuxdevelop.spring.batch.lightmin.api.controller.AbstractRestController;
 import org.tuxdevelop.spring.batch.lightmin.api.resource.batch.JobLaunch;
 import org.tuxdevelop.spring.batch.lightmin.api.resource.common.JobParameter;
 import org.tuxdevelop.spring.batch.lightmin.api.resource.common.JobParameters;
 import org.tuxdevelop.spring.batch.lightmin.api.resource.common.ParameterType;
+import org.tuxdevelop.spring.batch.lightmin.client.api.controller.AbstractRestController;
 import org.tuxdevelop.spring.batch.lightmin.documentation.api.AbstractServiceDocumentation;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.restassured.RestAssuredRestDocumentation.document;
-import static org.springframework.restdocs.restassured.operation.preprocess.RestAssuredPreprocessors.modifyUris;
+import static org.springframework.restdocs.restassured3.RestAssuredRestDocumentation.document;
 
 public class JobLauncherRestControllerDocumentation extends AbstractServiceDocumentation {
 
@@ -44,7 +42,7 @@ public class JobLauncherRestControllerDocumentation extends AbstractServiceDocum
                                 prettyPrint()),
                         preprocessResponse(prettyPrint())))
                 .when()
-                .port(getServerPort())
+                .port(this.getServerPort())
                 .body(jobLaunch)
                 .post(AbstractRestController.JobLauncherRestControllerAPI.JOB_LAUNCH)
                 .then()
